@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rccodex - Circular Clock</title>
+    <title>Circular Clock</title>
     <style>
         :root {
             --background-grey: #292929;
@@ -438,10 +438,10 @@
             window.addEventListener('resize', () => {
                 const newIsMobile = window.matchMedia('(max-width: 600px)').matches;
                 const newImagePath = newIsMobile ? './images/mobile/rain.jpg' : './images/desktop/rain.jpg';
-                
-                if (newImagePath !== img.src) {
-                    img.src = newImagePath;
-                }
+                console.log('Resize event - newIsMobile:', newIsMobile, 'newImagePath:', newImagePath, 'current img.src:', img.src);
+                // Luôn cập nhật src để đảm bảo hình ảnh được tải lại nếu cần, hoặc nếu có lỗi trước đó.
+                // Điều này đặc biệt hữu ích nếu hình ảnh ban đầu không tải được và người dùng thay đổi kích thước.
+                img.src = newImagePath;
             });
         }
 
