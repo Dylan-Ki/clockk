@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rccodex - Circular Clock</title>
+    <style>
+        :root {
+            --background-grey: #292929;
+            --ring-back: #FFFFFF;
+            --ring-preview-characters: 6;
+            --bar-colors: #FF3B30, #FF9500, #FFCC00, #4CD964, #5AC8FA, #007AFF, #5856D6;
+            
+            --center-dial-size: 150px;
+            --day-name-size: 250px;
+            --month-size: 350px;
+            --day-size: 450px;
+            --h1-size: 25px;
+            --h2-size: 12px;
+            --side-ring-size: 200px;
+            --flip-clock-size: 60px;
+            --sunset-primary: #FF6B6B;
+            --sunset-secondary: #4ECDC4;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 1s ease-in-out;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+
+
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 30px auto;
+            backdrop-filter: blur(8px);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+
+        .ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .center-dial {
+            width: 150px;
+            height: 150px;
+            background-color: var(--background-grey);
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .center-dial::before {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #1a1a1a;
+        }
+
+        .day-name-dial {
+            width: 200px;
+            height: 200px;
+            background-color: rgba(41, 41, 41, 0.8);
+            z-index: 3;
+        }
+
+        .month-dial {
+            width: 250px;
+            height: 250px;
+            background-color: rgba(41, 41, 41, 0.6);
+            z-index: 2;
+        }
+
+        .day-dial {
+            width: 290px;
+            height: 290px;
+            background-color: rgba(41, 41, 41, 0.4);
+            z-index: 1;
+        }
+
+        .clock-hand {
+            position: absolute;
+            background-color: white;
+            transform-origin: bottom center;
+            z-index: 5;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+
+        .hour-hand {
+            width: 4px;
+            height: 40px;
+            top: 35px;
+            left: calc(50% - 2px);
+        }
+
+        .minute-hand {
+            width: 3px;
+            height: 55px;
+            top: 20px;
+            left: calc(50% - 1.5px);
+        }
+
+        .second-hand {
+            width: 1px;
+            height: 60px;
+            top: 15px;
+            left: calc(50% - 0.5px);
+            background-color: #FF3B30;
+        }
+
+        .dial-text {
+            position: absolute;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day-numbers {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .day-number {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            transform-origin: center;
+            width: 20px;
+            text-align: center;
+            transition: color 0.3s ease, transform 0.3s ease;
+            font-weight: 500;
+        }
+
+        .day-number:hover {
+            color: #fff;
+            transform: scale(1.2) !important;
+        }
+
+        .month-names {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .month-name {
+            position: absolute;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            transform-origin: center;
+            width: 30px;
+            text-align: center;
+            transition: color 0.3s ease, transform 0.3s ease;
+            font-weight: 500;
+        }
+
+        .month-name:hover {
+            color: #007AFF;
+            transform: scale(1.2) !important;
+        }
+
+        .weekday-names {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .weekday-name {
+            position: absolute;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            transform-origin: center;
+            width: 30px;
+            text-align: center;
+            transition: color 0.3s ease, transform 0.3s ease;
+            font-weight: 500;
+        }
+
+        .weekday-name:hover {
+            color: #4CD964;
+            transform: scale(1.2) !important;
+        }
+
+        .active {
+            color: white;
+            font-weight: bold;
+        }
+
+        .active-month {
+            color: #007AFF;
+            font-weight: bold;
+        }
+
+        .active-day {
+            color: #4CD964;
+            font-weight: bold;
+        }
+
+        .active-date {
+            color: white;
+            font-weight: bold;
+        }
+
+        .code-section {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #1a1a1a;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-tabs {
+            display: flex;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+        }
+
+        .code-tab {
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .code-tab.active {
+            background-color: #333;
+        }
+
+        .tab-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .tab-css .tab-indicator {
+            background-color: #0095FF;
+        }
+
+        .tab-html .tab-indicator {
+            background-color: #FF3B30;
+        }
+
+        .code-content {
+            display: flex;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .code-panel {
+            flex: 1;
+            display: none;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .code-panel.active {
+            display: block;
+        }
+
+        .code-line {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #ccc;
+            margin: 2px 0;
+            white-space: pre-wrap;
+        }
+
+        .comment {
+            color: #666;
+        }
+
+        .property {
+            color: #5AC8FA;
+        }
+
+        .value {
+            color: #FF9500;
+        }
+
+        .selector {
+            color: #FFCC00;
+        }
+
+        .html-tag {
+            color: #FF3B30;
+        }
+
+        .html-attr {
+            color: #5AC8FA;
+        }
+
+        .html-attr-value {
+            color: #4CD964;
+        }
+
+        /* Matrix rain effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .footer {
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .clock-container {
+                transform: scale(0.8);
+            }
+            
+            .code-section {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clock-container">
+            <div class="ring day-dial">
+                <div class="day-numbers" id="day-numbers"></div>
+            </div>
+            <div class="ring month-dial">
+                <div class="month-names" id="month-names"></div>
+            </div>
+            <div class="ring day-name-dial">
+                <div class="weekday-names" id="weekday-names"></div>
+            </div>
+            <div class="ring center-dial">
+                <div class="clock-hand hour-hand" id="hour-hand"></div>
+                <div class="clock-hand minute-hand" id="minute-hand"></div>
+                <div class="clock-hand second-hand" id="second-hand"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize settings when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize UI
+            initializeClock();
+            initializeBackground();
+            initializeAudio();
+        });
+
+        function initializeBackground() {
+            // Kiểm tra xem có phải thiết bị di động không
+            const isMobile = window.matchMedia('(max-width: 600px)').matches;
+            
+            // Chọn hình nền dựa trên loại thiết bị
+            const imagePath = isMobile ? './images/mobile/rain.jpg' : './images/desktop/rain.jpg';
+            
+            // Tạo một đối tượng Image để kiểm tra việc tải hình ảnh
+            const img = new Image();
+            
+            img.onload = function() {
+                document.body.style.backgroundImage = `url(${imagePath})`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                console.log('Đã tải hình ảnh thành công:', imagePath);
+            };
+            
+            img.onerror = function() {
+                console.error('Không thể tải hình ảnh:', imagePath);
+                // Sử dụng màu nền dự phòng
+                document.body.style.backgroundColor = '#1a1a1a';
+            };
+            
+            img.src = imagePath; // Bắt đầu tải hình ảnh
+
+            // Thêm sự kiện lắng nghe thay đổi kích thước màn hình
+            window.addEventListener('resize', () => {
+                const newIsMobile = window.matchMedia('(max-width: 600px)').matches;
+                const newImagePath = newIsMobile ? './images/mobile/rain.jpg' : './images/desktop/rain.jpg';
+                
+                if (newImagePath !== img.src) {
+                    img.src = newImagePath;
+                }
+            });
+        }
+
+        function initializeAudio() {
+            const audio = new Audio('./audio/yt1s.com - Vietsub  Nhân Gian Bất Trị Đắc  Hoàng Thi Phù  人间不值得  黄诗扶.mp3');
+            audio.loop = true; // Lặp lại âm thanh
+
+            // Thêm nút điều khiển âm thanh
+            const audioControl = document.createElement('button');
+            audioControl.textContent = '🔊 Phát nhạc';
+            audioControl.style.position = 'fixed';
+            audioControl.style.bottom = '20px';
+            audioControl.style.right = '20px';
+            audioControl.style.padding = '10px 20px';
+            audioControl.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            audioControl.style.border = 'none';
+            audioControl.style.borderRadius = '5px';
+            audioControl.style.color = 'white';
+            audioControl.style.cursor = 'pointer';
+            audioControl.style.transition = 'background-color 0.3s';
+
+            audioControl.addEventListener('mouseover', () => {
+                audioControl.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+            });
+
+            audioControl.addEventListener('mouseout', () => {
+                audioControl.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            });
+
+            let isPlaying = false;
+            audioControl.addEventListener('click', () => {
+                if (isPlaying) {
+                    audio.pause();
+                    audioControl.textContent = '🔊 Phát nhạc';
+                } else {
+                    audio.play();
+                    audioControl.textContent = '🔇 Tắt nhạc';
+                }
+                isPlaying = !isPlaying;
+            });
+
+            document.body.appendChild(audioControl);
+        }
+
+
+
+function saveSettings() {
+    const settings = {
+        activeTab: activeTabId
+    };
+    localStorage.setItem('settings', JSON.stringify(settings));
+} // Save settings when tab changes
+            tabPanels.forEach(panel => {
+                panel.addEventListener('click', function() {
+                    saveSettings();
+                });
+            });
+
+            // Save settings when tab changes
+            tabPanels.forEach(panel => {
+                panel.addEventListener('click', function() {
+                    saveSettings();
+                });
+            });
+            
+            // Load previously selected tab if available
+            const settings = loadSettings();
+            if (settings && settings.activeTab) {
+                const activeTab = document.querySelector(`.tab-${settings.activeTab}`);
+                if (activeTab) {
+                    activeTab.click();
+                }
+            }
+        
+        
+        // Clock functionality
+        function initializeClock() {
+            // Create day numbers
+            const dayNumbers = document.getElementById('day-numbers');
+            for (let i = 1; i <= 31; i++) {
+                const day = document.createElement('div');
+                day.className = 'day-number';
+                day.textContent = i.toString().padStart(2, '0');
+                
+                // Position day numbers in a circle
+                const angle = (i - 1) * (360 / 31) - 90;
+                const radius = 145;
+                const x = radius * Math.cos(angle * Math.PI / 180);
+                const y = radius * Math.sin(angle * Math.PI / 180);
+                
+                day.style.transform = `translate(${x}px, ${y}px) rotate(${angle + 90}deg)`;
+                day.style.left = 'calc(50% - 10px)';
+                day.style.top = 'calc(50% - 10px)';
+                
+                dayNumbers.appendChild(day);
+            }
+            
+            // Create month names
+            const monthNames = document.getElementById('month-names');
+            const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            months.forEach((month, i) => {
+                const monthEl = document.createElement('div');
+                monthEl.className = 'month-name';
+                monthEl.textContent = month;
+                
+                // Position month names in a circle
+                const angle = i * (360 / 12) - 90;
+                const radius = 125;
+                const x = radius * Math.cos(angle * Math.PI / 180);
+                const y = radius * Math.sin(angle * Math.PI / 180);
+                
+                monthEl.style.transform = `translate(${x}px, ${y}px) rotate(${angle + 90}deg)`;
+                monthEl.style.left = 'calc(50% - 15px)';
+                monthEl.style.top = 'calc(50% - 10px)';
+                
+                monthNames.appendChild(monthEl);
+            });
+            
+            // Create weekday names
+            const weekdayNames = document.getElementById('weekday-names');
+            const weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+            weekdays.forEach((day, i) => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'weekday-name';
+                dayEl.textContent = day;
+                
+                // Position weekday names in a circle
+                const angle = i * (360 / 7) - 90;
+                const radius = 100;
+                const x = radius * Math.cos(angle * Math.PI / 180);
+                const y = radius * Math.sin(angle * Math.PI / 180);
+                
+                dayEl.style.transform = `translate(${x}px, ${y}px) rotate(${angle + 90}deg)`;
+                dayEl.style.left = 'calc(50% - 15px)';
+                dayEl.style.top = 'calc(50% - 10px)';
+                
+                weekdayNames.appendChild(dayEl);
+            });
+            
+            // Update clock hands and date indicators
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours() % 12;
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const day = now.getDate();
+                const month = now.getMonth();
+                const weekday = now.getDay() === 0 ? 6 : now.getDay() - 1; // Convert to 0-6 (Mon-Sun)
+                
+                // Update clock hands with smooth animation
+                const hourHand = document.getElementById('hour-hand');
+                const minuteHand = document.getElementById('minute-hand');
+                const secondHand = document.getElementById('second-hand');
+                
+                const hourDeg = (hours * 30) + (minutes * 0.5);
+                const minuteDeg = (minutes * 6) + (seconds * 0.1);
+                const secondDeg = seconds * 6;
+                
+                // Add smooth transition for hands
+                hourHand.style.transition = seconds === 0 ? 'transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44)' : '';
+                minuteHand.style.transition = seconds === 0 ? 'transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44)' : '';
+                secondHand.style.transition = 'transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44)';
+                
+                hourHand.style.transform = `rotate(${hourDeg}deg)`;
+                minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+                secondHand.style.transform = `rotate(${secondDeg}deg)`;
+                
+                // Update date indicators
+                document.querySelectorAll('.day-number').forEach((el, i) => {
+                    el.classList.toggle('active-date', i + 1 === day);
+                });
+                
+                document.querySelectorAll('.month-name').forEach((el, i) => {
+                    el.classList.toggle('active-month', i === month);
+                });
+                
+                document.querySelectorAll('.weekday-name').forEach((el, i) => {
+                    el.classList.toggle('active-day', i === weekday);
+                });
+                
+                // Save current time in settings (every minute)
+                if (seconds === 0) {
+                    saveSettings();
+                }
+            }
+            
+            // Update clock immediately and then every second
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+        
+        // Matrix effect for background
+        function initializeMatrixEffect() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size with better performance
+            function resizeCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                ctx.textBaseline = 'top';
+                return dpr;
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // Matrix characters
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const charSize = 12;
+            
+            // Create raindrops
+            const raindrops = [];
+            const raindropCount = Math.floor(canvas.width / charSize) * 2;
+            
+            for (let i = 0; i < raindropCount; i++) {
+                raindrops.push({
+                    x: Math.random() * canvas.width / 2,
+                    y: Math.random() * canvas.height / 2,
+                    length: Math.floor(Math.random() * 15) + 5,
+                    speed: Math.random() * 2 + 1
+                });
+            }
+            
+            // Draw matrix rain effect with improved performance
+            function drawMatrix() {
+                // Use a more efficient way to create trail effect
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                
+                // Batch rendering for better performance
+                ctx.save();
+                ctx.beginPath();
+                
+                // Set text attributes
+                ctx.font = `${charSize}px monospace`;
+                
+                // Draw each raindrop with improved performance
+                const now = performance.now() * 0.001;
+                
+                raindrops.forEach(drop => {
+                    // Calculate raindrop position with smooth animation
+                    const y = drop.y + Math.sin(now + drop.x) * 0.5;
+                    
+                    // Batch character rendering
+                    for (let i = 0; i < drop.length; i++) {
+                        const char = chars.charAt(Math.floor(Math.random() * chars.length));
+                        const alpha = i === 0 ? 1 : (1 - i / drop.length) * 0.8;
+                        
+                        ctx.fillStyle = i === 0
+                            ? `rgba(170, 255, 170, ${alpha})` // First character brighter
+                            : `rgba(0, ${Math.floor(255 - i * 15)}, 0, ${alpha})`;
+                        
+                        ctx.fillText(char, drop.x, y - i * charSize);
+                    }
+                    
+                    // Smooth movement with time-based animation
+                    drop.y += drop.speed * (60 / (1000 / 16)); // Normalize speed for 60fps
+                    
+                    // Reset with smooth transition
+                    if (drop.y > canvas.height / dpr + drop.length * charSize) {
+                        drop.y = -drop.length * charSize;
+                        drop.x = Math.random() * canvas.width / dpr;
+                        drop.length = Math.floor(Math.random() * 15) + 5;
+                        drop.speed = Math.random() * 1.5 + 0.5; // Slightly slower for smoother effect
+                    }
+                });
+                
+                ctx.restore();
+                
+                requestAnimationFrame(drawMatrix);
+            }
+
+            drawMatrix();
+        }
+    </script>
+</body>
+</html>
